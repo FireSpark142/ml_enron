@@ -7,7 +7,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
-from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import RepeatedKFold
 import pandas as pd
 import numpy as np
@@ -30,10 +29,23 @@ features_list = ['poi', 'exercised_stock_options', 'expenses', 'bonus'] # You wi
 with open("final_project_dataset.pkl", "rb") as data_file:
     data_dict = pickle.load(data_file)
 
+# Total number of rows
+print("Total number of data points: %i" % len(data_dict))
+# POI vs Non-POI
+poi = 0
+for ppp in data_dict:
+    if data_dict[ppp]['poi'] == True:
+        poi += 1
+print("Total number of POI: %i" % poi)
+print("Total number of non-POI: %i" % (len(data_dict) - poi))
+
+# Total number of data points: 146
+# Total number of poi: 18
+# Total number of non-poi: 128
+
+
 ### We convert the dict to a dataframe as it's easier to work with
 df = pd.DataFrame.from_records(data_dict).T
-print(df.shape)
-print(df)
 
 ### First thing I notice is NaN values in "numeric" data sets, this tells me that the data is NOT stored as float or int.
 ### This needs to be changed for the accuracy of the ML algorithm we decide to go with
@@ -41,7 +53,6 @@ print(df)
 num_cols = [i for i in df.columns if i != 'email_address']
 df[num_cols] = df[num_cols].astype(float)
 
-print(df.shape)
 ### Now we still have NaN in the string columns, lets go ahead and convert those to nan values so we can properly remove them.
 df.loc[df.email_address == 'NaN', 'email_address'] = np.nan
 
@@ -69,11 +80,14 @@ my_dataset = data_dict
 
 ### Get all the features
 features_list2 = ['exercised_expense_ratio', 'bonus_expense_ratio']
-features_list = features_list + features_list2
+features_list3 = features_list + features_list2
 
 ### Extract features and labels from dataset for local testing
-data = featureFormat(my_dataset, features_list, sort_keys = True)
+data = featureFormat(my_dataset, features_list3, sort_keys = True)
 labels, features = targetFeatureSplit(data)
+
+data2 = featureFormat(my_dataset, features_list, sort_keys = True)
+labels2, features2 = targetFeatureSplit(data)
 
 ### Task 4: Try a varity of classifiers
 ### Please name your classifier clf for easy export below.
@@ -145,7 +159,7 @@ plt.show()
 print("Total incorrect predictions of points out of a total %d points predicted : %d"
      % (y.shape[0], (labels_test != y).sum()))
 
-###Print the precision of the algorithim
+###Print the precision of the algorithm
 print(precision_score(labels_test, y, average='weighted'))
 
 ###Print the recall of the algorithm
